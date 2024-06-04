@@ -43,11 +43,13 @@ open class NWWebSocket: WebSocketConnection {
     ///   - options: The configuration options for the connection. The default value is `NWWebSocket.defaultOptions`.
     ///   - connectionQueue: A `DispatchQueue` on which to deliver all connection events. The default value is `.main`.
     public convenience init(request: URLRequest,
+                            requiredInterfaceType: NWInterface.InterfaceType,
                             connectAutomatically: Bool = false,
                             options: NWProtocolWebSocket.Options = NWWebSocket.defaultOptions,
                             connectionQueue: DispatchQueue = .main) {
 
         self.init(url: request.url!,
+                  requiredInterfaceType: requiredInterfaceType,
                   connectAutomatically: connectAutomatically,
                   connectionQueue: connectionQueue)
     }
@@ -60,6 +62,7 @@ open class NWWebSocket: WebSocketConnection {
     ///   - options: The configuration options for the connection. The default value is `NWWebSocket.defaultOptions`.
     ///   - connectionQueue: A `DispatchQueue` on which to deliver all connection events. The default value is `.main`.
     public init(url: URL,
+                requiredInterfaceType: NWInterface.InterfaceType,
                 connectAutomatically: Bool = false,
                 options: NWProtocolWebSocket.Options = NWWebSocket.defaultOptions,
                 connectionQueue: DispatchQueue = .main) {
@@ -73,6 +76,7 @@ open class NWWebSocket: WebSocketConnection {
         }
 
         parameters.defaultProtocolStack.applicationProtocols.insert(options, at: 0)
+        parameters.requiredInterfaceType = requiredInterfaceType
 
         self.connectionQueue = connectionQueue
 
