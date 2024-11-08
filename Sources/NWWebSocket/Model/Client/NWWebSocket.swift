@@ -1,6 +1,14 @@
 import Foundation
 import Network
 
+public struct NWWebSocketProxyConfig {
+    var endpoint: NWEndpoint
+    
+    public init(endpoint: NWEndpoint) {
+        self.endpoint = endpoint
+    }
+}
+
 /// A WebSocket client that manages a socket connection.
 open class NWWebSocket: WebSocketConnection {
 
@@ -46,12 +54,14 @@ open class NWWebSocket: WebSocketConnection {
                             requiredInterfaceType: NWInterface.InterfaceType,
                             connectAutomatically: Bool = false,
                             options: NWProtocolWebSocket.Options = NWWebSocket.defaultOptions,
-                            connectionQueue: DispatchQueue = .main) {
+                            connectionQueue: DispatchQueue = .main,
+                            proxyConfig: NWWebSocketProxyConfig? = nil) {
 
         self.init(url: request.url!,
                   requiredInterfaceType: requiredInterfaceType,
                   connectAutomatically: connectAutomatically,
-                  connectionQueue: connectionQueue)
+                  connectionQueue: connectionQueue,
+                  proxyConfig: proxyConfig)
     }
 
     /// Creates a `NWWebSocket` instance which connects a socket `url` with some configuration `options`.
@@ -65,18 +75,28 @@ open class NWWebSocket: WebSocketConnection {
                 requiredInterfaceType: NWInterface.InterfaceType,
                 connectAutomatically: Bool = false,
                 options: NWProtocolWebSocket.Options = NWWebSocket.defaultOptions,
-                connectionQueue: DispatchQueue = .main) {
+                connectionQueue: DispatchQueue = .main,
+                proxyConfig: NWWebSocketProxyConfig? = nil) {
 
         endpoint = .url(url)
 
         if url.scheme == "ws" {
-            parameters = NWParameters.tcp
+            parameters = .tcp
         } else {
-            parameters = NWParameters.tls
+            parameters = .tls
         }
 
         parameters.defaultProtocolStack.applicationProtocols.insert(options, at: 0)
         parameters.requiredInterfaceType = requiredInterfaceType
+
+        if #available(iOS 17.0, *) {
+            if let proxyConfig {
+                let configuration = ProxyConfiguration.init(httpCONNECTProxy: proxyConfig.endpoint)
+                let context = NWParameters.PrivacyContext(description: "HTTP Proxy")
+                context.proxyConfigurations = [configuration]
+                parameters.setPrivacyContext(context)
+            }
+        }
 
         self.connectionQueue = connectionQueue
 
